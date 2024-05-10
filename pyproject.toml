@@ -1,0 +1,70 @@
+[build-system]
+requires = [
+    "setuptools",
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "lcms_parser"
+description = "Parser for the LCMS raw instrument files."
+version = "0.3.5"
+requires-python = ">=3.11"
+authors = [
+    { name = "Sriram Vijayakrishnan", email = "Sriram.Vijayakrishnan@liverpool.ac.uk" },
+    { name = "Filip T. Szczypiński", email = "fiszczyp@gmail.com" },
+]
+dependencies = [
+    "masslynx",
+    "scipy",
+    "numpy",
+]
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Programming Language :: Python :: 3",
+    "Intended Audience :: Science/Research",
+    "Topic :: Scientific/Engineering :: Chemistry",
+]
+
+    [project.optional-dependencies]
+    dev = [
+        "pre-commit",
+        "black",
+        "docformatter",
+        "interrogate",
+        "isort",
+        "pycodestyle",
+        "pydocstyle",
+        "pytest",
+        "pytest-cov",
+        "flake8",
+    ]
+
+[tool.setuptools.package-data]
+"*" = ["py.typed"]
+
+[tool.pytest.ini_options]
+addopts = [
+    "--import-mode=importlib",
+]
+
+[tool.interrogate]
+exclude = [
+    "setup.py",
+]
+verbose = 2
+ignore-init-method = true
+ignore-init-module = true
+ignore-setters = true
+ignore-property-decorators = true
+ignore-magic = true
+
+[[tool.mypy.overrides]]
+module = [
+    'scipy.signal',
+    'masslynx',
+]
+ignore_missing_imports = true
+
+[tool.isort]
+profile         = "black"
+force_grid_wrap = 2

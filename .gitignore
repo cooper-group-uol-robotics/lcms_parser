@@ -1,0 +1,12 @@
+**/__pycache__/
+**/.cache
+*.ipynb_checkpoints
+**/.vscode
+
+build/
+*.egg-info/
+*.egg
+.tox/
+.coverage
+
+tests/

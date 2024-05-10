@@ -1,0 +1,5 @@
+# Parser for UPLC-MS raw data in A.I.C. Group
+
+## Requirements and installation
+
+Requires DLL driver files from Waters, packaged as `masslynx`: https://github.com/cooper-group-uol-robotics/masslynx_sdk (DOI: 10.5281/zenodo.11174323).
