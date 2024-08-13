@@ -22,7 +22,7 @@ from lcms_parser.traces.ion import (
     TICTracePeak,
 )
 
-__version__ = "0.3.5"
+__version__ = "2.0.0"
 __all__ = (
     "ExpectedResults",
     "HitIdentifier",
