@@ -6,6 +6,7 @@ from typing import Optional
 
 import numpy as np
 from numpy.typing import NDArray
+from scipy.integrate import trapezoid
 from scipy.signal import (
     find_peaks,
     peak_widths,
@@ -45,16 +46,19 @@ class AnalogTrace:
 
     times: NDArray[np.float64]
     intensities: NDArray[np.float64]
+    description: str
     peaks: list[AnalogTracePeak]
 
     def __init__(
         self,
         times: NDArray[np.float64],
         intensities: NDArray[np.float64],
+        description: str,
         peaks: Optional[list[AnalogTracePeak]] = None,
     ):
         self.times = times
         self.intensities = intensities / intensities.max()
+        self.description = description
         self.peaks = peaks if peaks is not None else []
 
     def get_peaks(
@@ -82,11 +86,11 @@ class AnalogTrace:
         rel_height = kwargs["rel_height"] if "rel_height" in kwargs else 0.95
 
         # Solvent front and end of run index
-        sfidx = self.get_scan_index(solvent_front)
-        eidx = self.get_scan_index(run_end)
+        sf_idx = self.get_scan_index(solvent_front)
+        end_idx = self.get_scan_index(run_end)
 
-        run_times = self.times[sfidx:eidx]
-        run_int = self.intensities[sfidx:eidx]
+        run_times = self.times[sf_idx:end_idx]
+        run_int = self.intensities[sf_idx:end_idx]
 
         peak_idx, _ = find_peaks(x=run_int, **kwargs)
         _, peak_height, peak_lhs, peak_rhs = peak_widths(
@@ -101,7 +105,7 @@ class AnalogTrace:
         for height, lhs, rhs in zip(peak_height, peak_lhs, peak_rhs):
             lhs_idx = round(lhs)
             rhs_idx = round(rhs)
-            area: float = np.trapz(
+            area: float = trapezoid(
                 run_int[lhs_idx:rhs_idx] - height,
                 dx=1,
             )

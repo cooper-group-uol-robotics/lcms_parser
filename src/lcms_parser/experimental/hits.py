@@ -45,8 +45,6 @@ class HitIdentifier(Experimental):
     ) -> list[MassSpectrumExperimentalHit]:
         """Identify hits in the .RAW file.
 
-
-
         Parameters
         ----------
         expected_results
@@ -69,6 +67,7 @@ class HitIdentifier(Experimental):
         Returns
         -------
             A list of experimental hits identified in the MS.
+
         """
 
         if time is None:

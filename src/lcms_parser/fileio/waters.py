@@ -4,11 +4,15 @@ Requires Waters Connect Python SDK.
 
 """
 
+import sys
 from datetime import timedelta
 from os import PathLike
+from pathlib import Path
+from typing import Optional
 
 import numpy as np
-from masslynx import (
+from masslynxsdk import (
+    MassLynxException,
     MassLynxRawAnalogReader,
     MassLynxRawChromatogramReader,
     MassLynxRawInfoReader,
@@ -28,6 +32,7 @@ class WatersRawFile(HitIdentifier):
     def __init__(
         self,
         path: PathLike,
+        license_key: Optional[str] = None,
     ):
         """Initialise MSFile.
 
@@ -36,23 +41,43 @@ class WatersRawFile(HitIdentifier):
         path
             A path to the .RAW file.
 
+        license_key
+            A license key from Waters. If None, the initialiser will try to
+            retrieve the key from a local "license.key" file.
+
         """
-        self._info_reader = MassLynxRawInfoReader(str(path))
-        self._analog_reader = MassLynxRawAnalogReader(str(path))
-        self._chromatogram_reader = MassLynxRawChromatogramReader(str(path))
-        self._scan_reader = MassLynxRawScanReader(str(path))
-        self._trace_function_lookup = self._get_number_functions()
-        self.traces: dict[IonTraceMode, TICTrace] = {}
-        self.analog: AnalogTrace = self.get_analog_trace()
+        if license_key is not None:
+            self._license_key = license_key
+        else:
+            try:
+                with open(Path.cwd() / "license.key", "r") as f:
+                    self._license_key = f.read()
+            except OSError as e:
+                print(
+                    f"Unable to open the license file!\n{e}", file=sys.stderr
+                )
 
-        # self.TICpeaks = []
-        # self.analogpeaks = []
-        # self.analogpeakwidths = []
-        # self.analogpeakfraction = []
-        # self.rtmax = 1
-        # self.MSScanmax = 1
+        try:
+            self._info_reader = MassLynxRawInfoReader(
+                str(path), self._license_key
+            )
+            self._analog_reader = MassLynxRawAnalogReader(
+                str(path), self._license_key
+            )
+            self._chromatogram_reader = MassLynxRawChromatogramReader(
+                str(path), self._license_key
+            )
+            self._scan_reader = MassLynxRawScanReader(
+                str(path), self._license_key
+            )
+            self._trace_function_lookup = self.get_chromatogram_ids()
+        except MassLynxException as e:
+            print(f"MassLynx license is invalid!\n{e}", file=sys.stderr)
 
-    def _get_number_functions(self):
+        self.ms_traces: dict[IonTraceMode, TICTrace] = {}
+        self.analog_traces: dict[int, AnalogTrace] = {}
+
+    def get_chromatogram_ids(self):
         """Get a lookup dictionary for function numbers of trace types.
 
         Waters .RAW files contain trace information under different numbers
@@ -79,32 +104,58 @@ class WatersRawFile(HitIdentifier):
             trace_function_lookup[trace] = func
         return trace_function_lookup
 
-    def __get_channel_count(self):
-        """Implementation of MassLynx SDK GetChannelCount C++ function."""
-        from ctypes import (
-            POINTER,
-            c_int,
-            c_void_p,
-        )
-
-        size = c_int(0)
-        ch_count = self._info_reader.massLynxDll.getChannelCount
-        ch_count.argtypes = [c_void_p, POINTER(c_int)]
-        self._info_reader.CheckReturnCode(
-            ch_count(self._info_reader._getReader(), size)
-        )
-        return size.value
-
     def __get_number_scans(self, function):
         return self._info_reader.GetScansInFunction(function)
 
-    def get_analog_trace(self) -> AnalogTrace:
-        times, intensities = self._analog_reader.ReadChannel(0)
-        data = AnalogTrace(
-            times=np.array(times), intensities=np.array(intensities)
-        )
+    def get_analog_ids(self) -> list[tuple[int, str]]:
+        traces: list[tuple[int, str]] = []
 
-        return data
+        for channel_id in range(self._analog_reader.GetChannelCount()):
+            traces.append(
+                (
+                    channel_id,
+                    self._analog_reader.GetChannelDescription(
+                        channel_id
+                    ).strip(),
+                )
+            )
+
+        return traces
+
+    def get_analog_trace(
+        self,
+        channel_id: int = 0,
+    ) -> AnalogTrace:
+        """Get AnalogTrace from the LC data file.
+
+        There might be different analog traces (e.g., different observed
+        wavelengths or baseline compensation methods), those are selected
+        with the `channel_id`.
+
+        Parameters
+        ----------
+        channel_id, optional
+            Analog channel to be extracted, by default 0
+
+        Returns
+        -------
+            AnalogTrace containing requested data.
+
+        """
+        if channel_id in self.analog_traces:
+            return self.analog_traces[channel_id]
+
+        else:
+            times, intensities = self._analog_reader.ReadChannel(channel_id)
+            description = self._analog_reader.GetChannelDescription(channel_id)
+            data = AnalogTrace(
+                times=np.array(times),
+                intensities=np.array(intensities),
+                description=description.strip(),
+            )
+            self.analog_traces[channel_id] = data
+
+            return data
 
     def get_trace(
         self,
@@ -122,8 +173,8 @@ class WatersRawFile(HitIdentifier):
             Trace containing requested data.
 
         """
-        if mode in self.traces:
-            return self.traces[mode]
+        if mode in self.ms_traces:
+            return self.ms_traces[mode]
 
         else:
             function = self._trace_function_lookup[mode]
@@ -135,7 +186,7 @@ class WatersRawFile(HitIdentifier):
                 times=np.array(times),
                 intensities=np.array(intensities),
             )
-            self.traces[mode] = data
+            self.ms_traces[mode] = data
 
             return data
 

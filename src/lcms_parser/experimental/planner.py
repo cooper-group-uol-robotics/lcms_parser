@@ -1,6 +1,5 @@
 """Module to deal with planning what is expected."""
 
-
 from collections import UserDict
 
 import numpy as np
