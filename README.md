@@ -1,5 +1,6 @@
 # Parser for UPLC-MS raw data in A.I.C. Group
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.11174536.svg)](https://doi.org/10.5281/zenodo.11174536)
+
 ## Requirements and installation
 
 Requires the official Python SDK from Waters. On runtime, a valid license will also be needed.
@@ -12,7 +13,7 @@ The [MassLynxSDK](https://microapps.on-demand.waters.com/home/downloads/masslynx
 pip install masslynxsdk-5.0.0-py3-none-any.whl
 ```
 
-## MassLynxSDK license
+### MassLynxSDK license
 
 The license key (string found in the `license.key` file) needs to be provided when interfacing with the API:
 
@@ -23,3 +24,12 @@ raw_file = WatersRawFile(path="test.raw", license_key="XXXXXX")
 ```
 
 Alternatively, the `license_key` parameter can be omitted as long as a valid `license.key` file is present in the current working directory.
+
+## Notes to developers and contributors
+
+There are linters and formatters in use for this project. Prior to contributing code, please make sure that your development environment is set up. Typically, an editable version would be installed for development and `pre-commit` would ensure that the code conforms to the standards before it is commmitted to GitHub:
+
+```
+pip install -e .[dev]
+pre-commit install
+```
