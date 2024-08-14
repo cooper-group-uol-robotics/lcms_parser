@@ -7,19 +7,19 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lcms_parser"
 description = "Parser for the LCMS raw instrument files."
-version = "0.3.5"
-requires-python = ">=3.11"
+version = "2.0.0"
+requires-python = ">=3.12"
 authors = [
     { name = "Sriram Vijayakrishnan", email = "Sriram.Vijayakrishnan@liverpool.ac.uk" },
     { name = "Filip T. Szczypiński", email = "fiszczyp@gmail.com" },
 ]
 dependencies = [
-    "masslynx",
+    "masslynxsdk",
     "scipy",
     "numpy",
 ]
 classifiers = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
     "Intended Audience :: Science/Research",
     "Topic :: Scientific/Engineering :: Chemistry",
@@ -31,6 +31,7 @@ classifiers = [
         "black",
         "docformatter",
         "interrogate",
+        "ipython",
         "isort",
         "pycodestyle",
         "pydocstyle",
@@ -61,7 +62,8 @@ ignore-magic = true
 [[tool.mypy.overrides]]
 module = [
     'scipy.signal',
-    'masslynx',
+    'scipy.integrate',
+    'masslynxsdk',
 ]
 ignore_missing_imports = true
 
