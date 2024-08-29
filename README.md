@@ -30,6 +30,10 @@ Alternatively, the `license_key` parameter can be omitted as long as a valid `li
 There are linters and formatters in use for this project. Prior to contributing code, please make sure that your development environment is set up. Typically, an editable version would be installed for development and `pre-commit` would ensure that the code conforms to the standards before it is commmitted to GitHub:
 
 ```
-pip install -e .[dev]
+python -m venv venv
+venv\Scripts\activate
+pip install -e .[dev] --find-links wheels
 pre-commit install
 ```
+
+Ensure that the [`masslynxsdk`](https://microapps.on-demand.waters.com/home/downloads/masslynx-sdk) from Waters is either installed on the system or that the wheel is present in `wheels/`.
