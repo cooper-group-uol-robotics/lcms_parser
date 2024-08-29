@@ -7,8 +7,8 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "lcms_parser"
 description = "Parser for the LCMS raw instrument files."
-version = "2.0.0"
-requires-python = ">=3.12"
+version = "2.1.0"
+requires-python = ">=3.10"
 authors = [
     { name = "Sriram Vijayakrishnan", email = "Sriram.Vijayakrishnan@liverpool.ac.uk" },
     { name = "Filip T. Szczypiński", email = "fiszczyp@gmail.com" },

@@ -125,6 +125,7 @@ class WatersRawFile(HitIdentifier):
     def get_analog_trace(
         self,
         channel_id: int = 0,
+        scale: bool = True,
     ) -> AnalogTrace:
         """Get AnalogTrace from the LC data file.
 
@@ -136,6 +137,9 @@ class WatersRawFile(HitIdentifier):
         ----------
         channel_id, optional
             Analog channel to be extracted, by default 0
+
+        scale, optional
+            Scale the absorbance values to 1 A.U., by default True
 
         Returns
         -------
@@ -152,6 +156,7 @@ class WatersRawFile(HitIdentifier):
                 times=np.array(times),
                 intensities=np.array(intensities),
                 description=description.strip(),
+                scale=scale,
             )
             self.analog_traces[channel_id] = data
 

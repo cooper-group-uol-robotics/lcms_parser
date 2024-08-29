@@ -54,10 +54,30 @@ class AnalogTrace:
         times: NDArray[np.float64],
         intensities: NDArray[np.float64],
         description: str,
+        scale: bool = True,
         peaks: Optional[list[AnalogTracePeak]] = None,
     ):
+        """Initialise AnalogTrace.
+
+        Parameters
+        ----------
+        times
+            Run times series.
+        intensities
+            Run intensities series.
+        description
+            Description of the trace.
+        scale, optional
+            Scale the absorbance values to 1 A.U., by default True
+        peaks, optional
+            Existing peaks, by default None
+
+        """
         self.times = times
-        self.intensities = intensities / intensities.max()
+        if scale:
+            self.intensities = intensities / intensities.max()
+        else:
+            self.intensities = intensities
         self.description = description
         self.peaks = peaks if peaks is not None else []
 
@@ -65,14 +85,25 @@ class AnalogTrace:
         self,
         solvent_front=0.4,
         run_end=3.0,
+        scale_integrals=True,
         **kwargs,
     ) -> list[AnalogTracePeak]:
         """Get peaks in an AnalogTrace.
 
         Uses `scipy.signal.find_peaks()` to identify peaks in the MS scan.
+        Parts of the run before the solvent front and after the end of the
+        actual run (e.g., column flush) are ignored in the analysis.
 
         Parameters
         ----------
+        solvent_front, optional
+            Time (in min) of the solvent front, by default 0.4.
+        run_end, optional
+            End (in min) of the actual run, by default 3.0
+        scale_integrals, optional
+            Whether the integrals should be scaled, hence
+            saving the LC Area Percentage rather than actual integrals, by
+            default True.
         **kwargs
             Optional arguments passed to `scipy.signal.find_peaks()`.
 
@@ -81,7 +112,6 @@ class AnalogTrace:
             List of Peaks found in the trace.
 
         """
-
         # % of maximum peak height at which the width is established
         rel_height = kwargs["rel_height"] if "rel_height" in kwargs else 0.95
 
@@ -118,7 +148,11 @@ class AnalogTrace:
                 AnalogTracePeak(
                     time=timedelta(minutes=run_times[idx]),
                     intensity=run_int[idx],
-                    integral=integrals[x] / total_area,
+                    integral=(
+                        integrals[x] / total_area
+                        if scale_integrals
+                        else integrals[x]
+                    ),
                     lhs=timedelta(minutes=run_times[round(peak_lhs[x])]),
                     rhs=timedelta(minutes=run_times[round(peak_rhs[x])]),
                     relative_height=peak_height[x],
