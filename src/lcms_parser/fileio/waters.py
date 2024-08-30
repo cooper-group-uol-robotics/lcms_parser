@@ -4,7 +4,6 @@ Requires Waters Connect Python SDK.
 
 """
 
-import sys
 from datetime import timedelta
 from os import PathLike
 from pathlib import Path
@@ -12,12 +11,12 @@ from typing import Optional
 
 import numpy as np
 from masslynxsdk import (
-    MassLynxException,
     MassLynxRawAnalogReader,
     MassLynxRawChromatogramReader,
     MassLynxRawInfoReader,
     MassLynxRawScanReader,
 )
+from masslynxsdk.MassLynxRawReader import MassLynxException
 
 from lcms_parser.experimental.hits import HitIdentifier
 from lcms_parser.helpers.helpers import IonTraceMode
@@ -46,18 +45,13 @@ class WatersRawFile(HitIdentifier):
             retrieve the key from a local "license.key" file.
 
         """
-        if license_key is not None:
-            self._license_key = license_key
-        else:
-            try:
+        try:
+            if license_key is not None:
+                self._license_key = license_key
+            else:
                 with open(Path.cwd() / "license.key", "r") as f:
                     self._license_key = f.read()
-            except OSError as e:
-                print(
-                    f"Unable to open the license file!\n{e}", file=sys.stderr
-                )
 
-        try:
             self._info_reader = MassLynxRawInfoReader(
                 str(path), self._license_key
             )
@@ -71,8 +65,15 @@ class WatersRawFile(HitIdentifier):
                 str(path), self._license_key
             )
             self._trace_function_lookup = self.get_chromatogram_ids()
-        except MassLynxException as e:
-            print(f"MassLynx license is invalid!\n{e}", file=sys.stderr)
+
+        except MassLynxException:
+            print("MassLynx license is invalid.")
+
+        except OSError as e:
+            print(f"Unable to open the license file:\n    {e}")
+
+        except Exception as e:
+            print(f"Cannot load the .RAW file: {e}.")
 
         self.ms_traces: dict[IonTraceMode, TICTrace] = {}
         self.analog_traces: dict[int, AnalogTrace] = {}
